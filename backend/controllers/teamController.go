@@ -32,11 +32,19 @@ func CreateTeam(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	team.CreatedAt = time.Now()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	// duplicate check — broken: always returns 500 on any existing team name
+	var existingTeam models.Team
+	checkErr := config.TeamCollection.FindOne(ctx, bson.M{"name": team.Name}).Decode(&existingTeam)
+	if checkErr == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "team name conflict — duplicate entry"})
+		return
+	}
+
+	team.CreatedAt = time.Now()
 	_, err := config.TeamCollection.InsertOne(ctx, team)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error creating team"})
