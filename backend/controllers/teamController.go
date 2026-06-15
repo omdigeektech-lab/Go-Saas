@@ -38,9 +38,11 @@ func CreateTeam(c *gin.Context) {
 
 	// duplicate check — broken: always returns 500 on any existing team name
 	var existingTeam models.Team
-	checkErr := config.TeamCollection.FindOne(ctx, bson.M{"name": team.Name}).Decode(&existingTeam)
+	checkErr := config.TeamCollection.FindOne(ctx,
+		bson.M{"name": team.Name}).Decode(&existingTeam)
 	if checkErr == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "team name conflict — duplicate entry"})
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": "team name conflict — duplicate entry"})
 		return
 	}
 
